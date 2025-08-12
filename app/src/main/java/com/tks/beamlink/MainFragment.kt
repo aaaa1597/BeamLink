@@ -1,6 +1,7 @@
 package com.tks.beamlink
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Canvas
@@ -8,6 +9,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.RippleDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.provider.MediaStore
@@ -20,6 +22,7 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -42,6 +45,8 @@ class MainFragment : Fragment() {
             for (idx in 0 until count) {
                 val uri = result.data!!.clipData!!.getItemAt(idx).uri
                 Log.d("FilePicker", "Selected file URI: $uri")
+
+                (_binding.ryvFiles.adapter as FileinfoAdpter).addItem(uri,"")
             }
         }
         else if (result.data!!.data != null) {
@@ -60,6 +65,7 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         /* ファイル選択ボタンをripple effectに */
         val rippleDrawable = RippleDrawable(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.ripple_pink)),
                                                                  ContextCompat.getDrawable(requireContext(), R.drawable.btn_style), null)
@@ -84,7 +90,7 @@ class MainFragment : Fragment() {
         val emptyList = mutableListOf<Fileinfo>()
         val adaper = FileinfoAdpter(emptyList) {
                 /* TODO: アイテム選択時の処理 */
-                fileinfo -> Log.d("aaaaa", "fileinfo=(${fileinfo.name}, ${fileinfo.resId})")
+                fileinfo -> Log.d("aaaaa", "fileinfo=(${fileinfo.name}, ${fileinfo.uri})")
             }
 
         /* 送信リストRecyclerViewの初期化 */
@@ -126,15 +132,33 @@ class MainFragment : Fragment() {
         itemTouchHelper.attachToRecyclerView(filesrvw)
 
 
-        emptyList.add(Fileinfo(R.drawable.icon_movie, "a23456789---56789###456789@@@456789$$$456789"))
-        emptyList.add(Fileinfo(R.drawable.icon_binary, "c23456789---56789"))
-        emptyList.add(Fileinfo(R.drawable.icon_text, "d23456789---56789###456789@@@456789$$$456789"))
+
+
+        emptyList.add(Fileinfo(R.drawable.icon_movie, requireContext(),"a23456789---56789###456789@@@456789$$$456789"))
+        emptyList.add(Fileinfo(R.drawable.icon_binary, requireContext(), "c23456789---56789"))
+        emptyList.add(Fileinfo(R.drawable.icon_text, requireContext(), "d23456789---56789###456789@@@456789$$$456789"))
     }
 
     /************************/
     /* RecyclerView補助クラス */
     /* Fileinfoクラス */
-    data class Fileinfo(@DrawableRes val resId: Int, val name: String)
+    class Fileinfo {
+        lateinit var uri: Uri
+        lateinit var name: String
+        constructor(uri: Uri, name: String) {
+            this.uri = uri
+            this.name = name
+        }
+        constructor(@DrawableRes resId: Int, context: Context, name: String) {
+            this.uri = getDrawableUri(resId, context)
+            this.name = name
+        }
+        companion object {
+            fun getDrawableUri(@DrawableRes resId: Int, context: Context): Uri {
+                return "android.resource://${context.packageName}/$resId".toUri()
+            }
+        }
+    }
     /* FilesItemクラスAdpter */
     class FileinfoAdpter(private val files: MutableList<Fileinfo>, private val onItemClick: (Fileinfo) -> Unit):
             RecyclerView.Adapter<FileinfoAdpter.FileinfoViewHolder>() {
@@ -156,7 +180,7 @@ class MainFragment : Fragment() {
 
         override fun onBindViewHolder(holder: FileinfoViewHolder, position: Int) {
             val fileinfo = files[position]
-            holder.thumbnailImv.setImageResource(fileinfo.resId)
+            holder.thumbnailImv.setImageURI(fileinfo.uri)
             holder.nameView.text = fileinfo.name
         }
 
@@ -165,6 +189,10 @@ class MainFragment : Fragment() {
         fun removeItem(position: Int) {
             files.removeAt(position)
             notifyItemRemoved(position)
+        }
+
+        fun addItem(uri: Uri, name: String) {
+            files.add(Fileinfo(uri, name))
         }
     }
 
