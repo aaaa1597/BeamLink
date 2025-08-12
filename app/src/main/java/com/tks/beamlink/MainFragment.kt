@@ -63,13 +63,13 @@ class MainFragment : Fragment() {
         _binding.ltvMime.setOnItemClickListener  { parent, view, position, id ->
             /* クリックアイテムを取得 */
             val item = parent.adapter.getItem(position) as MimetypeItem
-            val mimetype = when(item.mime) {
-                getString(R.string.field_1_image) -> "image/*"
-                getString(R.string.field_2_movie) -> "video/*"
-                getString(R.string.field_3_audio) -> "audio/*"
-                getString(R.string.field_4_document) -> "text/*;application/*"
-                getString(R.string.field_5_all) -> "*/*"
-                else -> "*/*"
+            val (mimeTypes, initUri) = when(item.mime) {
+                getString(R.string.field_1_image) -> Pair(arrayOf("image/*"), MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                getString(R.string.field_2_movie) -> Pair(arrayOf("video/*"), MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+                getString(R.string.field_3_audio) -> Pair(arrayOf("audio/*"), MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
+                getString(R.string.field_4_document) -> Pair(arrayOf("text/*","application/*"), MediaStore.Downloads.EXTERNAL_CONTENT_URI)
+                getString(R.string.field_5_all) -> Pair(arrayOf("*/*"),  MediaStore.Downloads.EXTERNAL_CONTENT_URI)
+                else -> Pair(arrayOf("*/*"),  MediaStore.Downloads.EXTERNAL_CONTENT_URI)
             }
             Log.d("aaaaa", "mime=${item.mime} resid=${item.resId}")
             /* Intentで起動 */
@@ -78,9 +78,10 @@ class MainFragment : Fragment() {
                 /* 複数のファイル選択を許可 */
                 putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                 /* 選択可能なMIMEタイプを指定 */
-                type = mimetype
+                type = "*/*"
+                putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
                 /* EXTRA_INITIAL_URIを設定して、初期表示ディレクトリを指定 */
-                putExtra(DocumentsContract.EXTRA_INITIAL_URI, MediaStore.Downloads.EXTERNAL_CONTENT_URI)
+                putExtra(DocumentsContract.EXTRA_INITIAL_URI, initUri)
             }
             /* Intentで起動 */
             pickMultipleFilesLauncher.launch(intent)
