@@ -9,4 +9,5 @@
     <string name="field_3_audio">Audio</string>
     <string name="field_4_document">Document</string>
     <string name="field_5_all">All</string>
+    <string name="btn_browse">Browse</string>
 </resources>
