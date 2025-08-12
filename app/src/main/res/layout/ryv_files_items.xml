@@ -4,9 +4,12 @@
     android:layout_height="60dp"
     android:clickable="true"
     android:focusable="true"
-    android:background="?android:attr/selectableItemBackground"
+    android:background="@drawable/custom_ripple"
     android:orientation="horizontal"
     android:gravity="center_vertical">
+
+<!--    android:background="?android:attr/selectableItemBackground"-->
+
     <ImageView
         android:id="@+id/imv_file_thumbnail"
         android:layout_width="32dp"
