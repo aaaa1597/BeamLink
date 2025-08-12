@@ -5,4 +5,5 @@
     <string name="btn_browse">Browse</string>
     <string name="file_thumbnail">file thumbnail</string>
     <string name="tmpstr">sssssss</string>
+    <string name="deletestr">delete</string>
 </resources>

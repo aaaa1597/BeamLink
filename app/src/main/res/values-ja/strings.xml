@@ -6,4 +6,5 @@
     <string name="btn_browse">ファイル選択</string>
     <string name="file_thumbnail">file thumbnail</string>
     <string name="tmpstr">sssssss</string>
+    <string name="deletestr">削除</string>
 </resources>

@@ -106,44 +106,6 @@ class MainFragment : Fragment() {
             override fun onChildDraw(canvas: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
                                      dX: Float, dY: Float/*スワイプ距離 */, actionState: Int, isCurrentlyActive: Boolean) {
                 val itemView = viewHolder.itemView
-                val paint = Paint().apply { color = Color.RED }
-
-                /* 背景描画 */
-                if (dX > 0) {
-                    /* 右スワイプ */
-                    val left  = itemView.left.toFloat()
-                    val top   = itemView.top.toFloat()
-                    val right = itemView.left + dX
-                    val bottom= itemView.bottom.toFloat()
-                    canvas.drawRect( left, top, right, bottom, paint)
-                } else {
-                    /* 左スワイプ */
-                    val left  = itemView.right + dX
-                    val top   = itemView.top.toFloat()
-                    val right = itemView.right.toFloat()
-                    val bottom= itemView.bottom.toFloat()
-                    canvas.drawRect(left, top, right, bottom, paint)
-                }
-
-                /* アイコン描画 */
-                val icon = ContextCompat.getDrawable(recyclerView.context, R.drawable.ic_delete)
-                val iconMargin = (itemView.height - icon!!.intrinsicHeight) / 2
-                val iconTop = itemView.top + (itemView.height - icon.intrinsicHeight) / 2
-                val iconBottom = iconTop + icon.intrinsicHeight
-
-                if (dX > 0) {
-                    /* 右スワイプ */
-                    val iconLeft = itemView.left + iconMargin
-                    val iconRight = iconLeft + icon.intrinsicWidth
-                    icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
-                } else {
-                    /* 左スワイプ */
-                    val iconRight = itemView.right - iconMargin
-                    val iconLeft = iconRight - icon.intrinsicWidth
-                    icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
-                }
-
-                icon.draw(canvas)
 
                 /* テキスト描画（💥削除！） */
                 val textPaint = Paint().apply {
@@ -151,7 +113,7 @@ class MainFragment : Fragment() {
                     textSize = 48f
                     typeface = Typeface.DEFAULT_BOLD
                 }
-                val text = "💥削除！"
+                val text = "💥${getString(R.string.deletestr)}!!"
                 val textX = if (dX > 0) itemView.left + 150f else itemView.right - 300f
                 val textY = itemView.top + itemView.height / 2f + 16f
                 canvas.drawText(text, textX, textY, textPaint)
