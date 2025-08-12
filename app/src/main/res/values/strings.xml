@@ -1,13 +1,8 @@
 <resources>
     <string name="app_name">BeamLink</string>
-    <string name="item_icon">item icon</string>
-    <string name="tmpstr">TmpStr</string>
     <string name="beamlink_kun">beamlink-kun</string>
     <string name="what_should_I_send">What should I send?</string>
-    <string name="field_1_image">Image</string>
-    <string name="field_2_movie">Movie</string>
-    <string name="field_3_audio">Audio</string>
-    <string name="field_4_document">Document</string>
-    <string name="field_5_all">All</string>
     <string name="btn_browse">Browse</string>
+    <string name="file_thumbnail">file thumbnail</string>
+    <string name="tmpstr">sssssss</string>
 </resources>

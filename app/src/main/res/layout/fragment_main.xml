@@ -22,10 +22,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/btn_browse"
+        android:layout_marginTop="10dp"
         android:layout_marginStart="10dp"
         android:clickable="true"
         app:layout_constraintTop_toBottomOf="@id/txt_what"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/ryv_files"
+        android:layout_marginTop="10dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/btnChooser"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.45"/>
 
     <ImageView
         android:id="@+id/imv_tmp"
