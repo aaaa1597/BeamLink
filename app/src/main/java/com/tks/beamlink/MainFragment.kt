@@ -94,10 +94,17 @@ class MainFragment : Fragment() {
     /* Fileinfoクラス */
     data class Fileinfo(@DrawableRes val resId: Int, val name: String)
     /* FilesItemクラスAdpter */
-    class FileinfoAdpter(private val files: List<Fileinfo>, private val onItemClick: (Fileinfo) -> Unit): RecyclerView.Adapter<FileinfoAdpter.FileinfoViewHolder>() {
-        class FileinfoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class FileinfoAdpter(private val files: List<Fileinfo>, private val onItemClick: (Fileinfo) -> Unit):
+            RecyclerView.Adapter<FileinfoAdpter.FileinfoViewHolder>() {
+        inner class FileinfoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val thumbnailImv: ImageView = itemView.findViewById(R.id.imv_file_thumbnail)
             val nameView: TextView = itemView.findViewById(R.id.txt_mime)
+
+            init {
+                itemView.setOnClickListener {
+                    onItemClick(files[adapterPosition])
+                }
+            }
         }
 
         override fun onCreateViewHolder(parent: ViewGroup,viewType: Int): FileinfoViewHolder {
@@ -109,9 +116,6 @@ class MainFragment : Fragment() {
             val fileinfo = files[position]
             holder.thumbnailImv.setImageResource(fileinfo.resId)
             holder.nameView.text = fileinfo.name
-            holder.itemView.setOnClickListener {
-                onItemClick(fileinfo)
-            }
         }
 
         override fun getItemCount(): Int = files.size
