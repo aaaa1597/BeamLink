@@ -3,6 +3,10 @@ package com.tks.beamlink
 import android.app.Activity
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.graphics.drawable.RippleDrawable
 import android.os.Bundle
 import android.provider.DocumentsContract
@@ -17,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tks.beamlink.databinding.FragmentMainBinding
@@ -76,16 +81,91 @@ class MainFragment : Fragment() {
             pickMultipleFilesLauncher.launch(intent)
         }
 
+        val emptyList = mutableListOf<Fileinfo>()
+        val adaper = FileinfoAdpter(emptyList) {
+                /* TODO: アイテム選択時の処理 */
+                fileinfo -> Log.d("aaaaa", "fileinfo=(${fileinfo.name}, ${fileinfo.resId})")
+            }
+
         /* 送信リストRecyclerViewの初期化 */
         val filesrvw = view.findViewById<RecyclerView>(R.id.ryv_files)
         filesrvw.layoutManager = LinearLayoutManager(requireContext())
-        val emptyList = mutableListOf<Fileinfo>()
+        filesrvw.adapter = adaper
+
+        /* RecyclerViewからのswip削除実装 */
+        val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                return false /* ドラッグ移動は不要 */
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                adaper.removeItem(position)
+            }
+
+            override fun onChildDraw(canvas: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
+                                     dX: Float, dY: Float/*スワイプ距離 */, actionState: Int, isCurrentlyActive: Boolean) {
+                val itemView = viewHolder.itemView
+                val paint = Paint().apply { color = Color.RED }
+
+                /* 背景描画 */
+                if (dX > 0) {
+                    /* 右スワイプ */
+                    val left  = itemView.left.toFloat()
+                    val top   = itemView.top.toFloat()
+                    val right = itemView.left + dX
+                    val bottom= itemView.bottom.toFloat()
+                    canvas.drawRect( left, top, right, bottom, paint)
+                } else {
+                    /* 左スワイプ */
+                    val left  = itemView.right + dX
+                    val top   = itemView.top.toFloat()
+                    val right = itemView.right.toFloat()
+                    val bottom= itemView.bottom.toFloat()
+                    canvas.drawRect(left, top, right, bottom, paint)
+                }
+
+                /* アイコン描画 */
+                val icon = ContextCompat.getDrawable(recyclerView.context, R.drawable.ic_delete)
+                val iconMargin = (itemView.height - icon!!.intrinsicHeight) / 2
+                val iconTop = itemView.top + (itemView.height - icon.intrinsicHeight) / 2
+                val iconBottom = iconTop + icon.intrinsicHeight
+
+                if (dX > 0) {
+                    /* 右スワイプ */
+                    val iconLeft = itemView.left + iconMargin
+                    val iconRight = iconLeft + icon.intrinsicWidth
+                    icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                } else {
+                    /* 左スワイプ */
+                    val iconRight = itemView.right - iconMargin
+                    val iconLeft = iconRight - icon.intrinsicWidth
+                    icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+                }
+
+                icon.draw(canvas)
+
+                /* テキスト描画（💥削除！） */
+                val textPaint = Paint().apply {
+                    color = Color.RED
+                    textSize = 48f
+                    typeface = Typeface.DEFAULT_BOLD
+                }
+                val text = "💥削除！"
+                val textX = if (dX > 0) itemView.left + 150f else itemView.right - 300f
+                val textY = itemView.top + itemView.height / 2f + 16f
+                canvas.drawText(text, textX, textY, textPaint)
+
+                super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            }
+
+        }
+        val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
+        itemTouchHelper.attachToRecyclerView(filesrvw)
+
+
         emptyList.add(Fileinfo(R.drawable.icon_movie, "a23456789---56789###456789@@@456789$$$456789"))
         emptyList.add(Fileinfo(R.drawable.icon_binary, "c23456789---56789"))
-        filesrvw.adapter = FileinfoAdpter(emptyList) {
-            /* TODO: アイテム選択時の処理 */
-            fileinfo -> Log.d("aaaaa", "fileinfo=(${fileinfo.name}, ${fileinfo.resId})")
-        }
         emptyList.add(Fileinfo(R.drawable.icon_text, "d23456789---56789###456789@@@456789$$$456789"))
     }
 
@@ -94,7 +174,7 @@ class MainFragment : Fragment() {
     /* Fileinfoクラス */
     data class Fileinfo(@DrawableRes val resId: Int, val name: String)
     /* FilesItemクラスAdpter */
-    class FileinfoAdpter(private val files: List<Fileinfo>, private val onItemClick: (Fileinfo) -> Unit):
+    class FileinfoAdpter(private val files: MutableList<Fileinfo>, private val onItemClick: (Fileinfo) -> Unit):
             RecyclerView.Adapter<FileinfoAdpter.FileinfoViewHolder>() {
         inner class FileinfoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val thumbnailImv: ImageView = itemView.findViewById(R.id.imv_file_thumbnail)
@@ -119,6 +199,11 @@ class MainFragment : Fragment() {
         }
 
         override fun getItemCount(): Int = files.size
+
+        fun removeItem(position: Int) {
+            files.removeAt(position)
+            notifyItemRemoved(position)
+        }
     }
 
     companion object{}
