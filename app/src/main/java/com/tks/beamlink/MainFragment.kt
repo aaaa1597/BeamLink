@@ -45,7 +45,7 @@ class MainFragment : Fragment() {
             for (idx in 0 until count) {
                 val uri = result.data!!.clipData!!.getItemAt(idx).uri
                 Log.d("aaaaa", "1-Selected file URI: $uri")
-                val bmp = Utils.getResizedBitmapFromUri(requireContext(), uri)
+                val bmp = Utils.generateThumbnail(requireContext(), uri)
                 Log.d("aaaaa", "1-Selected file bmp.size(${bmp?.width},${bmp?.height})")
                 val adapter = _binding.ryvFiles.adapter as FileinfoAdpter
                 val (mimeType, name, size) = Utils.getPropertyFromUri(requireContext(), uri)
@@ -58,7 +58,7 @@ class MainFragment : Fragment() {
             /* 単一のファイルが選択された場合 */
             val uri = result.data!!.data ?: return@registerForActivityResult
             Log.d("aaaaa", "2-Selected file URI: $uri")
-            val bmp = Utils.getResizedBitmapFromUri(requireContext(), uri)
+            val bmp = Utils.generateThumbnail(requireContext(), uri)
             Log.d("aaaaa", "2-Selected file bmp.size(${bmp?.width},${bmp?.height})")
             val adapter = _binding.ryvFiles.adapter as FileinfoAdpter
             val (mimeType, name, size) = Utils.getPropertyFromUri(requireContext(), uri)
@@ -144,8 +144,8 @@ class MainFragment : Fragment() {
 
 
 
-
-        emptyList.add(Fileinfo(R.drawable.icon_movie, requireContext()))
+		/* TODO: デバッグ用削除予定 */
+        emptyList.add(Fileinfo(R.drawable.icon_document, requireContext()))
         emptyList.add(Fileinfo(R.drawable.icon_binary, requireContext()))
         emptyList.add(Fileinfo(R.drawable.icon_text, requireContext()))
     }
@@ -166,7 +166,7 @@ class MainFragment : Fragment() {
             this.size = size
         }
         constructor(@DrawableRes resId: Int, context: Context) {
-            this.bmp = Utils.getResizedBitmapFromDrawableRes(context, resId)
+            this.bmp = Utils.getResizedBitmapFromDrawableRes(context, resId )
             this.mimeType = "image/*"
             this.name = context.resources.getResourceEntryName(resId) + ".png" // 拡張子は適宜変更
             this.size = bmp?.byteCount?.toLong()

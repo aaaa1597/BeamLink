@@ -4,12 +4,20 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.drawable.Drawable
+import android.graphics.pdf.PdfRenderer
+import android.media.ThumbnailUtils
 import android.net.Uri
+import android.os.Build
 import android.provider.OpenableColumns
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
+import androidx.core.net.toUri
+import java.io.File
 
 
 class Utils {
@@ -31,8 +39,8 @@ class Utils {
             return Triple(mimeType, name, size)
         }
 
-        /* UriからBitmapを生成 */
-        fun getResizedBitmapFromDrawableRes(context: Context, @DrawableRes drawableResId: Int, reqWidth: Int = 128, reqHeight: Int = 128): Bitmap? {
+        /* DrawableResからBitmapを生成 */
+        fun getResizedBitmapFromDrawableRes(context: Context, @DrawableRes drawableResId: Int, reqWidth: Int = 200, reqHeight: Int = 200): Bitmap? {
             val drawable: Drawable? = ContextCompat.getDrawable(context, drawableResId)
             drawable ?: return null
 
@@ -53,43 +61,90 @@ class Utils {
             return bitmap
         }
 
-        /* UriからBitmapを生成 */
-        fun getResizedBitmapFromUri(context: Context, uri: Uri, targetWidth: Int = 128, targetHeight: Int = 128): Bitmap? {
-            var inputStream = context.contentResolver.openInputStream(uri) ?: return null
+        fun generateThumbnail(context: Context, uri: Uri, thumbnailSize: Int = 200): Bitmap? {
+            val contentResolver = context.contentResolver
 
-            /* 1. 画像のサイズを読み込む (inJustDecodeBoundsをtrueに設定) */
-            val options = BitmapFactory.Options()
-            options.inJustDecodeBounds = true
-            BitmapFactory.decodeStream(inputStream, null, options)
+            /* MIMEタイプ取得 */
+            val mimeType = contentResolver.getType(uri) ?: return getResizedBitmapFromDrawableRes(context, R.drawable.icon_binary)
 
-            /* 2. ダウンサンプルサイズを計算 */
-            options.inSampleSize = calculateInSampleSize(options, targetWidth, targetHeight)
+            return when {
+                /* 画像サムネイル */
+                mimeType.startsWith("image/") -> {
+                    return contentResolver.openInputStream(uri)?.use { input ->
+                                val bitmap = BitmapFactory.decodeStream(input)
+                                bitmap?.scale(thumbnailSize, thumbnailSize)
+                            }
+                }
 
-            /* 3. 再度ストリームを開き、ダウンサンプリングして画像を読み込む */
-            inputStream.close()
-            inputStream = context.contentResolver.openInputStream(uri) ?: return null
-            options.inJustDecodeBounds = false
-            val bitmap = BitmapFactory.decodeStream(inputStream, null, options)
+                /* 動画サムネイル */
+                mimeType.startsWith("video/") -> {
+                    val tempFile = File.createTempFile("thumb", null, context.cacheDir)
+                                        contentResolver.openInputStream(uri)?.use { input ->
+                                            tempFile.outputStream().use { output ->
+                                                input.copyTo(output)
+                                            }
+                                        }
+                    return contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                        ThumbnailUtils.createVideoThumbnail(
+                            tempFile,
+                            android.util.Size(thumbnailSize, thumbnailSize),
+                            null
+                        )
+                    }
+                }
 
-            inputStream.close()
-            return bitmap
-        }
+                /* PDFサムネイル */
+                mimeType == "application/pdf" -> {
+                    /* PDFサムネイル（1ページ目） */
+                    return contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                        val pdfRenderer = PdfRenderer(pfd)
+                        val page = pdfRenderer.openPage(0)
 
-        /* サンプルサイズを計算するヘルパーメソッド */
-        private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
-            val height = options.outHeight
-            val width = options.outWidth
-            var inSampleSize = 1
+                        /* サイズ比を維持してサムネイル生成 */
+                        val ratio = page.width.toFloat() / page.height
+                        val width: Int
+                        val height: Int
+                        if (ratio > 1) {
+                            width = thumbnailSize
+                            height = (thumbnailSize / ratio).toInt()
+                        } else {
+                            height = thumbnailSize
+                            width = (thumbnailSize * ratio).toInt()
+                        }
 
-            if (width < reqWidth || height < reqHeight)
-                return inSampleSize /* 幅/高さのどちらかが要求より小さければ要求通り */
+                        val bitmap = createBitmap(width, height)
+                        page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                        page.close()
+                        pdfRenderer.close()
+                        return bitmap
+                    }
+                }
 
-            val halfHeight = height / 2
-            val halfWidth = width / 2
-            while ((halfHeight / inSampleSize) > reqHeight && (halfWidth / inSampleSize) > reqWidth) {
-                inSampleSize *= 2
+                /* その他アイコン */
+                mimeType.startsWith("text/") -> {
+                    return getResizedBitmapFromDrawableRes(context, R.drawable.icon_text)
+                }
+
+                /* その他アイコン */
+                mimeType == "application/octet-stream" -> {
+                    return getResizedBitmapFromDrawableRes(context, R.drawable.icon_binary)
+                }
+
+                /* ドキュメントアイコン */
+                mimeType.startsWith("application/") -> {
+                    return getResizedBitmapFromDrawableRes(context, R.drawable.icon_audio)
+                }
+
+                /* 音楽アイコン */
+                mimeType.startsWith("audio/") -> {
+                    return getResizedBitmapFromDrawableRes(context, R.drawable.icon_audio)
+                }
+
+                else -> {
+                    /* 不明な場合はデフォルトアイコン */
+                    getResizedBitmapFromDrawableRes(context, R.drawable.icon_binary)
+                }
             }
-            return inSampleSize
         }
     }
 }
