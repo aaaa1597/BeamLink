@@ -19,17 +19,22 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <ImageView
-        android:id="@+id/imv_fileicon"
+    <ScrollView
+        android:id="@+id/slv_img"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:adjustViewBounds="true"
-        android:contentDescription="@string/str_thumbnail"
-        android:src="@drawable/icon_audio"
-        android:layout_marginTop="10dp"
+        android:paddingTop="50dp"
         app:layout_constraintWidth_percent="0.5"
-        app:layout_constraintTop_toBottomOf="@id/txt_name"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+        <ImageView
+            android:id="@+id/imv_fileicon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/str_thumbnail"
+            android:src="@drawable/icon_audio"/>
+    </ScrollView>
 
     <TextView
         android:id="@+id/txv_titlesize"
@@ -40,7 +45,7 @@
         android:text="@string/title_size"
         app:layout_constraintWidth_percent="0.2"
         app:layout_constraintTop_toBottomOf="@id/txt_name"
-        app:layout_constraintStart_toEndOf="@id/imv_fileicon"/>
+        app:layout_constraintStart_toEndOf="@id/slv_img"/>
 
     <TextView
         android:id="@+id/txv_size"
@@ -50,7 +55,7 @@
         android:text="@string/app_name"
         app:layout_constraintWidth_percent="0.3"
         app:layout_constraintTop_toBottomOf="@id/txv_titlesize"
-        app:layout_constraintStart_toEndOf="@id/imv_fileicon"/>
+        app:layout_constraintStart_toEndOf="@id/slv_img"/>
 
     <TextView
         android:id="@+id/txv_titleupdate"
@@ -61,7 +66,7 @@
         android:text="@string/title_update"
         app:layout_constraintWidth_percent="0.2"
         app:layout_constraintTop_toBottomOf="@id/txv_size"
-        app:layout_constraintStart_toEndOf="@id/imv_fileicon"/>
+        app:layout_constraintStart_toEndOf="@id/slv_img"/>
 
     <TextView
         android:id="@+id/txv_update"
@@ -72,6 +77,6 @@
         android:text="@string/app_name"
         app:layout_constraintWidth_percent="0.3"
         app:layout_constraintTop_toBottomOf="@id/txv_titleupdate"
-        app:layout_constraintStart_toEndOf="@id/imv_fileicon"/>
+        app:layout_constraintStart_toEndOf="@id/slv_img"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

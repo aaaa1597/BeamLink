@@ -156,6 +156,7 @@ class MainFragment : Fragment() {
         emptyList.add(Fileinfo(R.drawable.icon_document, requireContext()))
         emptyList.add(Fileinfo(R.drawable.icon_binary, requireContext()))
         emptyList.add(Fileinfo(R.drawable.icon_text, requireContext()))
+        /* デバッグ用削除予定 ここまで */
     }
 
     /************************/
