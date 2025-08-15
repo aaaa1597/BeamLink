@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="60dp"
     android:clickable="true"
@@ -8,20 +9,21 @@
     android:orientation="horizontal"
     android:gravity="center_vertical">
 
-<!--    android:background="?android:attr/selectableItemBackground"-->
-
     <ImageView
         android:id="@+id/imv_file_thumbnail"
-        android:layout_width="32dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:layout_marginStart="10dp"
         android:src="@drawable/icon_image"
         android:contentDescription="@string/file_thumbnail"/>
     <TextView
         android:id="@+id/txt_mime"
         android:text="@string/tmpstr"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="4"
         android:layout_marginStart="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        app:autoSizeTextType="uniform"/>
 
 </LinearLayout>

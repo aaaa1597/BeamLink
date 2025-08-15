@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -44,15 +45,24 @@ class MainFragment : Fragment() {
             val count = result.data!!.clipData!!.itemCount
             for (idx in 0 until count) {
                 val uri = result.data!!.clipData!!.getItemAt(idx).uri
-                Log.d("FilePicker", "Selected file URI: $uri")
+                Log.d("aaaaa", "1-Selected file URI: $uri")
+                val bmp = Utils.getResizedBitmapFromUri(requireContext(), uri)
+                Log.d("aaaaa", "1-Selected file bmp.size(${bmp?.width},${bmp?.height})")
+                val adapter = _binding.ryvFiles.adapter as FileinfoAdpter
+                adapter.addItem(bmp,Utils.getFileNameFromUri(requireContext(), uri))
+                adapter.notifyItemInserted(adapter.itemCount - 1)
 
-                (_binding.ryvFiles.adapter as FileinfoAdpter).addItem(uri,"")
             }
         }
         else if (result.data!!.data != null) {
             /* 単一のファイルが選択された場合 */
-            val uri = result.data!!.data
-            Log.d("FilePicker", "Selected file URI: $uri")
+            val uri = result.data!!.data ?: return@registerForActivityResult
+            Log.d("aaaaa", "2-Selected file URI: $uri")
+            val bmp = Utils.getResizedBitmapFromUri(requireContext(), uri)
+            Log.d("aaaaa", "2-Selected file bmp.size(${bmp?.width},${bmp?.height})")
+            val adapter = _binding.ryvFiles.adapter as FileinfoAdpter
+            adapter.addItem(bmp,Utils.getFileNameFromUri(requireContext(), uri))
+            adapter.notifyItemInserted(adapter.itemCount - 1)
         }
     }
 
@@ -88,9 +98,9 @@ class MainFragment : Fragment() {
         }
 
         val emptyList = mutableListOf<Fileinfo>()
-        val adaper = FileinfoAdpter(emptyList) {
+        val adaper = FileinfoAdpter(emptyList) { fileinfo ->
                 /* TODO: アイテム選択時の処理 */
-                fileinfo -> Log.d("aaaaa", "fileinfo=(${fileinfo.name}, ${fileinfo.uri})")
+                Log.d("aaaaa", "fileinfo=(${fileinfo.name}, bmp.sise(${fileinfo.bmp?.width}, ${fileinfo.bmp?.height}))")
             }
 
         /* 送信リストRecyclerViewの初期化 */
@@ -143,20 +153,15 @@ class MainFragment : Fragment() {
     /* RecyclerView補助クラス */
     /* Fileinfoクラス */
     class Fileinfo {
-        lateinit var uri: Uri
+        var bmp: Bitmap?
         lateinit var name: String
-        constructor(uri: Uri, name: String) {
-            this.uri = uri
+        constructor(bmp: Bitmap?, name: String) {
+            this.bmp = bmp
             this.name = name
         }
         constructor(@DrawableRes resId: Int, context: Context, name: String) {
-            this.uri = getDrawableUri(resId, context)
+            this.bmp = Utils.getResizedBitmapFromDrawableRes(context, resId)
             this.name = name
-        }
-        companion object {
-            fun getDrawableUri(@DrawableRes resId: Int, context: Context): Uri {
-                return "android.resource://${context.packageName}/$resId".toUri()
-            }
         }
     }
     /* FilesItemクラスAdpter */
@@ -180,7 +185,7 @@ class MainFragment : Fragment() {
 
         override fun onBindViewHolder(holder: FileinfoViewHolder, position: Int) {
             val fileinfo = files[position]
-            holder.thumbnailImv.setImageURI(fileinfo.uri)
+            holder.thumbnailImv.setImageBitmap(fileinfo.bmp)
             holder.nameView.text = fileinfo.name
         }
 
@@ -191,8 +196,8 @@ class MainFragment : Fragment() {
             notifyItemRemoved(position)
         }
 
-        fun addItem(uri: Uri, name: String) {
-            files.add(Fileinfo(uri, name))
+        fun addItem(bmp: Bitmap?, name: String) {
+            files.add(Fileinfo(bmp, name))
         }
     }
 

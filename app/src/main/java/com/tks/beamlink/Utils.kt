@@ -4,13 +4,55 @@ import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 
 
 class Utils {
     companion object {
+        /* Uriからファイル名を取得 */
+        fun getFileNameFromUri(context: Context, uri: Uri): String {
+            var name: String? = null
+            val cursor = context.contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (it.moveToFirst() && nameIndex != -1) {
+                    name = it.getString(nameIndex)
+                }
+            }
+            return name ?: "--none--"
+        }
+
         /* UriからBitmapを生成 */
-        fun getResizedBitmapFromUri(context: Context, uri: Uri, targetWidth: Int, targetHeight: Int): Bitmap? {
+        fun getResizedBitmapFromDrawableRes(context: Context, @DrawableRes drawableResId: Int, reqWidth: Int = 128, reqHeight: Int = 128): Bitmap? {
+            val drawable: Drawable? = ContextCompat.getDrawable(context, drawableResId)
+            drawable ?: return null
+
+            /* 元のサイズ */
+            val srcWidth = drawable.intrinsicWidth.takeIf { it > 0 } ?: 1
+            val srcHeight = drawable.intrinsicHeight.takeIf { it > 0 } ?: 1
+
+            val ratio = minOf(reqWidth.toFloat() / srcWidth, reqHeight.toFloat() / srcHeight)
+            val finalWidth = (srcWidth * ratio).toInt().coerceAtLeast(1)
+            val finalHeight = (srcHeight* ratio).toInt().coerceAtLeast(1)
+
+            /* 描画用Bitmap作成 */
+            val bitmap = createBitmap(finalWidth, finalHeight)
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, finalWidth, finalHeight)
+            drawable.draw(canvas)
+
+            return bitmap
+        }
+
+        /* UriからBitmapを生成 */
+        fun getResizedBitmapFromUri(context: Context, uri: Uri, targetWidth: Int = 128, targetHeight: Int = 128): Bitmap? {
             var inputStream = context.contentResolver.openInputStream(uri) ?: return null
 
             /* 1. 画像のサイズを読み込む (inJustDecodeBoundsをtrueに設定) */
@@ -32,7 +74,7 @@ class Utils {
         }
 
         /* サンプルサイズを計算するヘルパーメソッド */
-        fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+        private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
             val height = options.outHeight
             val width = options.outWidth
             var inSampleSize = 1
