@@ -1,30 +1,38 @@
 package com.tks.beamlink
 
+import com.tks.beamlink.MainFragment.Fileinfo
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.graphics.pdf.PdfRenderer
 import android.media.ThumbnailUtils
 import android.net.Uri
-import android.os.Build
+import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
-import androidx.core.net.toUri
+import androidx.documentfile.provider.DocumentFile
 import java.io.File
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 class Utils {
     companion object {
         /* Uriからファイル名を取得 */
-        fun getPropertyFromUri(context: Context, uri: Uri): Triple<String?, String?, Long?> {
+        fun generateFileinfoFromUri(context: Context, uri: Uri): Fileinfo {
+            /* サムネイル画像取得 */
+            val bmp = generateThumbnail(context, uri)
+            /* mimeType取得 */
             val mimeType = context.contentResolver.getType(uri)
+            /* ファイル名取得, ファイルサイズ取得 */
             var name: String? = null
             var size: Long? = null
             val cursor = context.contentResolver.query(uri, null, null, null, null)
@@ -36,7 +44,10 @@ class Utils {
                     if (sizeIndex != -1) size = it.getLong(sizeIndex)
                 }
             }
-            return Triple(mimeType, name, size)
+            /* ファイル更新日付取得 */
+            val updateStr = getLastModifiedDateStr(context, uri)
+            /* Fileinfoクラス返却 */
+            return Fileinfo(bmp, mimeType, name, size, updateStr)
         }
 
         /* DrawableResからBitmapを生成 */
@@ -146,5 +157,72 @@ class Utils {
                 }
             }
         }
+
+        fun formatFileSize(size: Long?): String {
+            if(size == null) return "??? B"
+            val sizeInBytes: Long = size
+            val kilo = 1024L
+            val mega = kilo * 1024
+            val giga = mega * 1024
+            val tera = giga * 1024
+
+            return when {
+                sizeInBytes < kilo -> "$sizeInBytes B"
+                sizeInBytes < mega -> String.format(Locale.JAPAN, "%.1f KB", sizeInBytes.toDouble() / kilo)
+                sizeInBytes < giga -> String.format(Locale.JAPAN, "%.1f MB", sizeInBytes.toDouble() / mega)
+                sizeInBytes < tera -> String.format(Locale.JAPAN, "%.1f GB", sizeInBytes.toDouble() / giga)
+                else -> String.format(Locale.JAPAN, "%.1f TB", sizeInBytes.toDouble() / tera)
+            }
+        }
+
+        fun formatDateTime(timestampms: Long): String {
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                .withZone(ZoneId.systemDefault())
+            return formatter.format(Instant.ofEpochMilli(timestampms))
+        }
+
+        fun getLastModifiedDateStr(context: Context, uri: Uri): String {
+            val timestampms = getLastModifiedDate(context, uri)
+            if(timestampms==null) return "???"
+
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                                             .withZone(ZoneId.systemDefault())
+            return formatter.format(Instant.ofEpochMilli(timestampms))
+        }
+        fun getLastModifiedDate(context: Context, uri: Uri): Long? {
+            return when {
+                /* MediaStore由来（content://media） */
+                uri.authority?.startsWith("media") == true -> {
+                    Log.d("aaaaa", "aaaaaaaaaaaaaaaa")
+                    getMediaStoreLastModified(context, uri)
+                }
+
+                /* DocumentFile由来（content://com.android.providers...） */
+                uri.scheme == "content" || uri.scheme == "file" -> {
+                    Log.d("aaaaa", "bbbbbbbbbbbb")
+                    getDocumentFileLastModified(context, uri)
+                }
+
+                else -> null /* 未対応のスキーム */
+            }
+        }
+
+        fun getMediaStoreLastModified(context: Context, uri: Uri): Long? {
+            val projection = arrayOf(MediaStore.MediaColumns.DATE_MODIFIED)
+            context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                val index = cursor.getColumnIndex(MediaStore.MediaColumns.DATE_MODIFIED)
+                if (index != -1 && cursor.moveToFirst()) {
+                    val seconds = cursor.getLong(index)
+                    return seconds * 1000   /* ミリ秒に変換 */
+                }
+            }
+            return null
+        }
+
+        fun getDocumentFileLastModified(context: Context, uri: Uri): Long? {
+            val docFile = DocumentFile.fromSingleUri(context, uri)
+            return docFile?.lastModified()?.takeIf { it > 0 }
+        }
+
     }
 }

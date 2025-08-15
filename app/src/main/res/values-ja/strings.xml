@@ -9,7 +9,5 @@
     <string name="deletestr">削除</string>
     <string name="str_thumbnail">thumbnail</string>
     <string name="title_size">サイズ</string>
-    <string name="value_size">%1$s MB</string>
     <string name="title_update">更新日付</string>
-    <string name="value_update">%1$s</string>
 </resources>

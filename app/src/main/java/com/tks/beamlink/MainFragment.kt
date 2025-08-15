@@ -29,7 +29,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tks.beamlink.databinding.DialogFileinfoBinding
 import com.tks.beamlink.databinding.FragmentMainBinding
-import java.net.URLConnection
 
 class MainFragment : Fragment() {
     /************/
@@ -50,8 +49,8 @@ class MainFragment : Fragment() {
                 val bmp = Utils.generateThumbnail(requireContext(), uri)
                 Log.d("aaaaa", "1-Selected file bmp.size(${bmp?.width},${bmp?.height})")
                 val adapter = _binding.ryvFiles.adapter as FileinfoAdpter
-                val (mimeType, name, size) = Utils.getPropertyFromUri(requireContext(), uri)
-                adapter.addItem(bmp, mimeType, name, size)
+                val fileinfo = Utils.generateFileinfoFromUri(requireContext(), uri)
+                adapter.addItem(fileinfo)
                 adapter.notifyItemInserted(adapter.itemCount - 1)
 
             }
@@ -60,11 +59,9 @@ class MainFragment : Fragment() {
             /* 単一のファイルが選択された場合 */
             val uri = result.data!!.data ?: return@registerForActivityResult
             Log.d("aaaaa", "2-Selected file URI: $uri")
-            val bmp = Utils.generateThumbnail(requireContext(), uri)
-            Log.d("aaaaa", "2-Selected file bmp.size(${bmp?.width},${bmp?.height})")
             val adapter = _binding.ryvFiles.adapter as FileinfoAdpter
-            val (mimeType, name, size) = Utils.getPropertyFromUri(requireContext(), uri)
-            adapter.addItem(bmp, mimeType, name, size)
+            val fileinfo = Utils.generateFileinfoFromUri(requireContext(), uri)
+            adapter.addItem(fileinfo)
             adapter.notifyItemInserted(adapter.itemCount - 1)
         }
     }
@@ -102,14 +99,17 @@ class MainFragment : Fragment() {
 
         val emptyList = mutableListOf<Fileinfo>()
         val adaper = FileinfoAdpter(emptyList) { fileinfo ->
-                Log.d("aaaaa", "fileinfo=(${fileinfo.name}, bmp.sise(${fileinfo.bmp?.width}, ${fileinfo.bmp?.height}))")
-                val dialogView: DialogFileinfoBinding = DialogFileinfoBinding.inflate(LayoutInflater.from(requireContext()))
-                AlertDialog.Builder(requireContext())
-                    .setView(dialogView.root)
-                    .setPositiveButton("OK") { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    .show()
+            val dialogView: DialogFileinfoBinding = DialogFileinfoBinding.inflate(LayoutInflater.from(requireContext()))
+            dialogView.txtName.text = fileinfo.name
+            dialogView.imvFileicon.setImageBitmap(fileinfo.bmp)
+            dialogView.txvSize.text = Utils.formatFileSize(fileinfo.size)
+            dialogView.txvUpdate.text = fileinfo.update
+            AlertDialog.Builder(requireContext())
+                .setView(dialogView.root)
+                .setPositiveButton("OK") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .show()
             }
 
         /* 送信リストRecyclerViewの初期化 */
@@ -166,18 +166,21 @@ class MainFragment : Fragment() {
         var mimeType: String?
         var name: String?
         var size: Long?
+        var update: String?
 
-        constructor(bmp: Bitmap?, mimeType: String?, name: String?, size: Long?) {
+        constructor(bmp: Bitmap?, mimeType: String?, name: String?, size: Long?, update: String?) {
             this.bmp = bmp
             this.mimeType = mimeType
             this.name = name
             this.size = size
+            this.update = update
         }
         constructor(@DrawableRes resId: Int, context: Context) {
             this.bmp = Utils.getResizedBitmapFromDrawableRes(context, resId )
             this.mimeType = "image/*"
             this.name = context.resources.getResourceEntryName(resId) + ".png" // 拡張子は適宜変更
             this.size = bmp?.byteCount?.toLong()
+            this.update = Utils.formatDateTime(context.packageManager.getPackageInfo(context.packageName, 0).lastUpdateTime)
         }
     }
     /* FilesItemクラスAdpter */
@@ -212,8 +215,8 @@ class MainFragment : Fragment() {
             notifyItemRemoved(position)
         }
 
-        fun addItem(bmp: Bitmap?, mimeType: String?, name: String?, size: Long?) {
-            files.add(Fileinfo(bmp, mimeType, name, size))
+        fun addItem(fileinfo: Fileinfo) {
+            files.add(fileinfo)
         }
     }
 
