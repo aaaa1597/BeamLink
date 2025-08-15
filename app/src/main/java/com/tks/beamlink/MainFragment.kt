@@ -21,11 +21,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.tks.beamlink.databinding.DialogFileinfoBinding
 import com.tks.beamlink.databinding.FragmentMainBinding
 import java.net.URLConnection
 
@@ -100,8 +102,14 @@ class MainFragment : Fragment() {
 
         val emptyList = mutableListOf<Fileinfo>()
         val adaper = FileinfoAdpter(emptyList) { fileinfo ->
-                /* TODO: アイテム選択時の処理 */
                 Log.d("aaaaa", "fileinfo=(${fileinfo.name}, bmp.sise(${fileinfo.bmp?.width}, ${fileinfo.bmp?.height}))")
+                val dialogView: DialogFileinfoBinding = DialogFileinfoBinding.inflate(LayoutInflater.from(requireContext()))
+                AlertDialog.Builder(requireContext())
+                    .setView(dialogView.root)
+                    .setPositiveButton("OK") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .show()
             }
 
         /* 送信リストRecyclerViewの初期化 */

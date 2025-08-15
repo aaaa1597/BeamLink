@@ -6,4 +6,9 @@
     <string name="file_thumbnail">file thumbnail</string>
     <string name="tmpstr">sssssss</string>
     <string name="deletestr">delete</string>
+    <string name="str_thumbnail">thumbnail</string>
+    <string name="title_size">Size</string>
+    <string name="value_size">%1$s MB</string>
+    <string name="title_update">Update</string>
+    <string name="value_update">%1$s</string>
 </resources>
