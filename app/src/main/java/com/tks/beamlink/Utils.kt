@@ -11,7 +11,6 @@ import android.media.ThumbnailUtils
 import android.net.Uri
 import android.provider.MediaStore
 import android.provider.OpenableColumns
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
@@ -38,38 +37,20 @@ class Utils {
             val cursor = context.contentResolver.query(uri, null, null, null, null)
             cursor?.use {
                 val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                val sizeIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                val sizeIndex = it.getColumnIndex(OpenableColumns.SIZE)
                 if (it.moveToFirst()) {
                     if (nameIndex != -1) name = it.getString(nameIndex)
                     if (sizeIndex != -1) size = it.getLong(sizeIndex)
+                    else { context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                            size = pfd.statSize
+                        }
+                    }
                 }
             }
             /* ファイル更新日付取得 */
             val updateStr = getLastModifiedDateStr(context, uri)
             /* Fileinfoクラス返却 */
             return Fileinfo(bmp, mimeType, name, size, updateStr)
-        }
-
-        /* DrawableResからBitmapを生成 */
-        fun getResizedBitmapFromDrawableRes(context: Context, @DrawableRes drawableResId: Int, reqWidth: Int = 200, reqHeight: Int = 200): Bitmap? {
-            val drawable: Drawable? = ContextCompat.getDrawable(context, drawableResId)
-            drawable ?: return null
-
-            /* 元のサイズ */
-            val srcWidth = drawable.intrinsicWidth.takeIf { it > 0 } ?: 1
-            val srcHeight = drawable.intrinsicHeight.takeIf { it > 0 } ?: 1
-
-            val ratio = minOf(reqWidth.toFloat() / srcWidth, reqHeight.toFloat() / srcHeight)
-            val finalWidth = (srcWidth * ratio).toInt().coerceAtLeast(1)
-            val finalHeight = (srcHeight* ratio).toInt().coerceAtLeast(1)
-
-            /* 描画用Bitmap作成 */
-            val bitmap = createBitmap(finalWidth, finalHeight)
-            val canvas = Canvas(bitmap)
-            drawable.setBounds(0, 0, finalWidth, finalHeight)
-            drawable.draw(canvas)
-
-            return bitmap
         }
 
         fun generateThumbnail(context: Context, uri: Uri, thumbnailSize: Int = 200): Bitmap? {
@@ -131,7 +112,7 @@ class Utils {
                     }
                 }
 
-                /* その他アイコン */
+                /* textアイコン */
                 mimeType.startsWith("text/") -> {
                     return getResizedBitmapFromDrawableRes(context, R.drawable.icon_text)
                 }
@@ -156,6 +137,28 @@ class Utils {
                     getResizedBitmapFromDrawableRes(context, R.drawable.icon_binary)
                 }
             }
+        }
+
+        /* DrawableResからBitmapを生成 */
+        fun getResizedBitmapFromDrawableRes(context: Context, @DrawableRes drawableResId: Int, reqWidth: Int = 200, reqHeight: Int = 200): Bitmap? {
+            val drawable: Drawable? = ContextCompat.getDrawable(context, drawableResId)
+            drawable ?: return null
+
+            /* 元のサイズ */
+            val srcWidth = drawable.intrinsicWidth.takeIf { it > 0 } ?: 1
+            val srcHeight = drawable.intrinsicHeight.takeIf { it > 0 } ?: 1
+
+            val ratio = minOf(reqWidth.toFloat() / srcWidth, reqHeight.toFloat() / srcHeight)
+            val finalWidth = (srcWidth * ratio).toInt().coerceAtLeast(1)
+            val finalHeight = (srcHeight* ratio).toInt().coerceAtLeast(1)
+
+            /* 描画用Bitmap作成 */
+            val bitmap = createBitmap(finalWidth, finalHeight)
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, finalWidth, finalHeight)
+            drawable.draw(canvas)
+
+            return bitmap
         }
 
         fun formatFileSize(size: Long?): String {
@@ -193,13 +196,11 @@ class Utils {
             return when {
                 /* MediaStore由来（content://media） */
                 uri.authority?.startsWith("media") == true -> {
-                    Log.d("aaaaa", "aaaaaaaaaaaaaaaa")
                     getMediaStoreLastModified(context, uri)
                 }
 
                 /* DocumentFile由来（content://com.android.providers...） */
                 uri.scheme == "content" || uri.scheme == "file" -> {
-                    Log.d("aaaaa", "bbbbbbbbbbbb")
                     getDocumentFileLastModified(context, uri)
                 }
 
@@ -223,6 +224,5 @@ class Utils {
             val docFile = DocumentFile.fromSingleUri(context, uri)
             return docFile?.lastModified()?.takeIf { it > 0 }
         }
-
     }
 }
