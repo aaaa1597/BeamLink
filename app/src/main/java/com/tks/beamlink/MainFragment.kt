@@ -10,7 +10,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.RippleDrawable
-import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.provider.MediaStore
@@ -23,12 +22,12 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tks.beamlink.databinding.FragmentMainBinding
+import java.net.URLConnection
 
 class MainFragment : Fragment() {
     /************/
@@ -49,7 +48,8 @@ class MainFragment : Fragment() {
                 val bmp = Utils.getResizedBitmapFromUri(requireContext(), uri)
                 Log.d("aaaaa", "1-Selected file bmp.size(${bmp?.width},${bmp?.height})")
                 val adapter = _binding.ryvFiles.adapter as FileinfoAdpter
-                adapter.addItem(bmp,Utils.getFileNameFromUri(requireContext(), uri))
+                val (mimeType, name, size) = Utils.getPropertyFromUri(requireContext(), uri)
+                adapter.addItem(bmp, mimeType, name, size)
                 adapter.notifyItemInserted(adapter.itemCount - 1)
 
             }
@@ -61,7 +61,8 @@ class MainFragment : Fragment() {
             val bmp = Utils.getResizedBitmapFromUri(requireContext(), uri)
             Log.d("aaaaa", "2-Selected file bmp.size(${bmp?.width},${bmp?.height})")
             val adapter = _binding.ryvFiles.adapter as FileinfoAdpter
-            adapter.addItem(bmp,Utils.getFileNameFromUri(requireContext(), uri))
+            val (mimeType, name, size) = Utils.getPropertyFromUri(requireContext(), uri)
+            adapter.addItem(bmp, mimeType, name, size)
             adapter.notifyItemInserted(adapter.itemCount - 1)
         }
     }
@@ -144,9 +145,9 @@ class MainFragment : Fragment() {
 
 
 
-        emptyList.add(Fileinfo(R.drawable.icon_movie, requireContext(),"a23456789---56789###456789@@@456789$$$456789"))
-        emptyList.add(Fileinfo(R.drawable.icon_binary, requireContext(), "c23456789---56789"))
-        emptyList.add(Fileinfo(R.drawable.icon_text, requireContext(), "d23456789---56789###456789@@@456789$$$456789"))
+        emptyList.add(Fileinfo(R.drawable.icon_movie, requireContext()))
+        emptyList.add(Fileinfo(R.drawable.icon_binary, requireContext()))
+        emptyList.add(Fileinfo(R.drawable.icon_text, requireContext()))
     }
 
     /************************/
@@ -154,14 +155,21 @@ class MainFragment : Fragment() {
     /* Fileinfoクラス */
     class Fileinfo {
         var bmp: Bitmap?
-        lateinit var name: String
-        constructor(bmp: Bitmap?, name: String) {
+        var mimeType: String?
+        var name: String?
+        var size: Long?
+
+        constructor(bmp: Bitmap?, mimeType: String?, name: String?, size: Long?) {
             this.bmp = bmp
+            this.mimeType = mimeType
             this.name = name
+            this.size = size
         }
-        constructor(@DrawableRes resId: Int, context: Context, name: String) {
+        constructor(@DrawableRes resId: Int, context: Context) {
             this.bmp = Utils.getResizedBitmapFromDrawableRes(context, resId)
-            this.name = name
+            this.mimeType = "image/*"
+            this.name = context.resources.getResourceEntryName(resId) + ".png" // 拡張子は適宜変更
+            this.size = bmp?.byteCount?.toLong()
         }
     }
     /* FilesItemクラスAdpter */
@@ -196,8 +204,8 @@ class MainFragment : Fragment() {
             notifyItemRemoved(position)
         }
 
-        fun addItem(bmp: Bitmap?, name: String) {
-            files.add(Fileinfo(bmp, name))
+        fun addItem(bmp: Bitmap?, mimeType: String?, name: String?, size: Long?) {
+            files.add(Fileinfo(bmp, mimeType, name, size))
         }
     }
 

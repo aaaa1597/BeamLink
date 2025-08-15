@@ -1,11 +1,9 @@
 package com.tks.beamlink
 
-import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -17,16 +15,20 @@ import androidx.core.graphics.createBitmap
 class Utils {
     companion object {
         /* Uriからファイル名を取得 */
-        fun getFileNameFromUri(context: Context, uri: Uri): String {
+        fun getPropertyFromUri(context: Context, uri: Uri): Triple<String?, String?, Long?> {
+            val mimeType = context.contentResolver.getType(uri)
             var name: String? = null
+            var size: Long? = null
             val cursor = context.contentResolver.query(uri, null, null, null, null)
             cursor?.use {
                 val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (it.moveToFirst() && nameIndex != -1) {
-                    name = it.getString(nameIndex)
+                val sizeIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (it.moveToFirst()) {
+                    if (nameIndex != -1) name = it.getString(nameIndex)
+                    if (sizeIndex != -1) size = it.getLong(sizeIndex)
                 }
             }
-            return name ?: "--none--"
+            return Triple(mimeType, name, size)
         }
 
         /* UriからBitmapを生成 */
