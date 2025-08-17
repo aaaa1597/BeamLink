@@ -219,10 +219,7 @@ class FileSelectFragment : Fragment() {
         companion object {
             private val DiffCallback = object : DiffUtil.ItemCallback<Fileinfo>() {
                 override fun areItemsTheSame(oldItem: Fileinfo, newItem: Fileinfo): Boolean {
-                    return oldItem.mimeType == newItem.mimeType &&
-                            oldItem.name == newItem.name &&
-                            oldItem.update == newItem.update &&
-                            oldItem.size == newItem.size
+                    return oldItem == newItem
                 }
 
                 override fun areContentsTheSame(oldItem: Fileinfo, newItem: Fileinfo): Boolean {
