@@ -9,5 +9,5 @@
         android:id="@+id/mainFragment"
         android:name="com.tks.beamlink.FileSelectFragment"
         android:label="fragment_main"
-        tools:layout="@layout/fragment_main" />
+        tools:layout="@layout/fragment_fileselect" />
 </navigation>

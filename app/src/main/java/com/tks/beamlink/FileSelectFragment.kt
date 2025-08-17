@@ -34,21 +34,21 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.tks.beamlink.databinding.DialogFileinfoBinding
-import com.tks.beamlink.databinding.FragmentMainBinding
+import com.tks.beamlink.databinding.FragmentFileselectBinding
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class FileSelectFragment : Fragment() {
     /************/
     /* メンバ定義 */
-    private lateinit var _binding: FragmentMainBinding
+    private lateinit var _binding: FragmentFileselectBinding
     private val _viewModel: FileSelectViewModel by lazy {
         ViewModelProvider(this)[FileSelectViewModel::class.java]
     }
-    private var filesFlowJob: Job = Job()
+    private var _filesFlowJob: Job = Job()
 
     /* ファイル選択ランチャー */
-    private val pickMultipleFilesLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+    private val _pickMultipleFilesLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         /* ファイルリストの戻り */
         result ->
         if (result.resultCode != Activity.RESULT_OK) return@registerForActivityResult
@@ -75,7 +75,7 @@ class FileSelectFragment : Fragment() {
     /**********/
     /* 定型関数 */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,savedInstanceState: Bundle?): View? {
-        _binding = FragmentMainBinding.inflate(inflater, container, false)
+        _binding = FragmentFileselectBinding.inflate(inflater, container, false)
         return _binding.root
     }
 
@@ -100,7 +100,7 @@ class FileSelectFragment : Fragment() {
                 putExtra(DocumentsContract.EXTRA_INITIAL_URI, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             }
             /* 生成Intentで起動 */
-            pickMultipleFilesLauncher.launch(intent)
+            _pickMultipleFilesLauncher.launch(intent)
         }
 
         val adaper = FileinfoAdpter() { fileinfo ->
@@ -118,7 +118,7 @@ class FileSelectFragment : Fragment() {
             }
 
         /* StateFlow監視 */
-        filesFlowJob = viewLifecycleOwner.lifecycleScope.launch { repeatOnLifecycle(Lifecycle.State.RESUMED) {
+        _filesFlowJob = viewLifecycleOwner.lifecycleScope.launch { repeatOnLifecycle(Lifecycle.State.RESUMED) {
             _viewModel.filesFlow.collect { newData ->
                 adaper.submitList(newData)
             }
@@ -163,7 +163,7 @@ class FileSelectFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        filesFlowJob.cancel()
+        _filesFlowJob.cancel()
     }
 
     /************************/
