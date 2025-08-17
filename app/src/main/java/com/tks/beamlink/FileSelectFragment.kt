@@ -24,16 +24,29 @@ import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.tks.beamlink.databinding.DialogFileinfoBinding
 import com.tks.beamlink.databinding.FragmentMainBinding
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
-class MainFragment : Fragment() {
+class FileSelectFragment : Fragment() {
     /************/
     /* メンバ定義 */
     private lateinit var _binding: FragmentMainBinding
+    private val _viewModel: FileSelectViewModel by lazy {
+        ViewModelProvider(this)[FileSelectViewModel::class.java]
+    }
+    private var filesFlowJob: Job = Job()
+
     /* ファイル選択ランチャー */
     private val pickMultipleFilesLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         /* ファイルリストの戻り */
@@ -46,23 +59,16 @@ class MainFragment : Fragment() {
             for (idx in 0 until count) {
                 val uri = result.data!!.clipData!!.getItemAt(idx).uri
                 Log.d("aaaaa", "1-Selected file URI: $uri")
-                val bmp = Utils.generateThumbnail(requireContext(), uri)
-                Log.d("aaaaa", "1-Selected file bmp.size(${bmp?.width},${bmp?.height})")
-                val adapter = _binding.ryvFiles.adapter as FileinfoAdpter
                 val fileinfo = Utils.generateFileinfoFromUri(requireContext(), uri)
-                adapter.addItem(fileinfo)
-                adapter.notifyItemInserted(adapter.itemCount - 1)
-
+                _viewModel.addItem(fileinfo)
             }
         }
         else if (result.data!!.data != null) {
             /* 単一のファイルが選択された場合 */
             val uri = result.data!!.data ?: return@registerForActivityResult
             Log.d("aaaaa", "2-Selected file URI: $uri")
-            val adapter = _binding.ryvFiles.adapter as FileinfoAdpter
             val fileinfo = Utils.generateFileinfoFromUri(requireContext(), uri)
-            adapter.addItem(fileinfo)
-            adapter.notifyItemInserted(adapter.itemCount - 1)
+            _viewModel.addItem(fileinfo)
         }
     }
 
@@ -98,7 +104,7 @@ class MainFragment : Fragment() {
         }
 
         val emptyList = mutableListOf<Fileinfo>()
-        val adaper = FileinfoAdpter(emptyList) { fileinfo ->
+        val adaper = FileinfoAdpter() { fileinfo ->
             val dialogView: DialogFileinfoBinding = DialogFileinfoBinding.inflate(LayoutInflater.from(requireContext()))
             dialogView.txtName.text = fileinfo.name
             dialogView.imvFileicon.setImageBitmap(fileinfo.bmp)
@@ -112,6 +118,13 @@ class MainFragment : Fragment() {
                 .show()
             }
 
+        /* StateFlow監視 */
+        filesFlowJob = viewLifecycleOwner.lifecycleScope.launch { repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            _viewModel.filesFlow.collect { newData ->
+                adaper.submitList(newData)
+            }
+        }}
+
         /* 送信リストRecyclerViewの初期化 */
         val filesrvw = view.findViewById<RecyclerView>(R.id.ryv_files)
         filesrvw.layoutManager = LinearLayoutManager(requireContext())
@@ -123,10 +136,8 @@ class MainFragment : Fragment() {
                 return false /* ドラッグ移動は不要 */
             }
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.adapterPosition
-                adaper.removeItem(position)
-            }
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) =
+                _viewModel.removeItem(viewHolder.adapterPosition)
 
             override fun onChildDraw(canvas: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
                                      dX: Float, dY: Float/*スワイプ距離 */, actionState: Int, isCurrentlyActive: Boolean) {
@@ -159,6 +170,11 @@ class MainFragment : Fragment() {
         /* デバッグ用削除予定 ここまで */
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        filesFlowJob.cancel()
+    }
+
     /************************/
     /* RecyclerView補助クラス */
     /* Fileinfoクラス */
@@ -185,15 +201,15 @@ class MainFragment : Fragment() {
         }
     }
     /* FilesItemクラスAdpter */
-    class FileinfoAdpter(private val files: MutableList<Fileinfo>, private val onItemClick: (Fileinfo) -> Unit):
-            RecyclerView.Adapter<FileinfoAdpter.FileinfoViewHolder>() {
+    class FileinfoAdpter(private val onItemClick: (Fileinfo) -> Unit):
+        ListAdapter<Fileinfo, FileinfoAdpter.FileinfoViewHolder>(DiffCallback) {
         inner class FileinfoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val thumbnailImv: ImageView = itemView.findViewById(R.id.imv_file_thumbnail)
             val nameView: TextView = itemView.findViewById(R.id.txt_mime)
 
             init {
                 itemView.setOnClickListener {
-                    onItemClick(files[adapterPosition])
+                    onItemClick(getItem(adapterPosition))
                 }
             }
         }
@@ -204,20 +220,27 @@ class MainFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: FileinfoViewHolder, position: Int) {
-            val fileinfo = files[position]
+            val fileinfo = getItem(position)
             holder.thumbnailImv.setImageBitmap(fileinfo.bmp)
             holder.nameView.text = fileinfo.name
         }
 
-        override fun getItemCount(): Int = files.size
+        companion object {
+            private val DiffCallback = object : DiffUtil.ItemCallback<Fileinfo>() {
+                override fun areItemsTheSame(oldItem: Fileinfo, newItem: Fileinfo): Boolean {
+                    return oldItem.mimeType == newItem.mimeType &&
+                            oldItem.name == newItem.name &&
+                            oldItem.update == newItem.update &&
+                            oldItem.size == newItem.size
+                }
 
-        fun removeItem(position: Int) {
-            files.removeAt(position)
-            notifyItemRemoved(position)
-        }
-
-        fun addItem(fileinfo: Fileinfo) {
-            files.add(fileinfo)
+                override fun areContentsTheSame(oldItem: Fileinfo, newItem: Fileinfo): Boolean {
+                    return oldItem.mimeType == newItem.mimeType &&
+                           oldItem.name == newItem.name &&
+                           oldItem.update == newItem.update &&
+                           oldItem.size == newItem.size
+                }
+            }
         }
     }
 

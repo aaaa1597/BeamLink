@@ -1,6 +1,6 @@
 package com.tks.beamlink
 
-import com.tks.beamlink.MainFragment.Fileinfo
+import com.tks.beamlink.FileSelectFragment.Fileinfo
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
