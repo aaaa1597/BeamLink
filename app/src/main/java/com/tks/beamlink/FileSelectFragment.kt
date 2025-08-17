@@ -103,7 +103,6 @@ class FileSelectFragment : Fragment() {
             pickMultipleFilesLauncher.launch(intent)
         }
 
-        val emptyList = mutableListOf<Fileinfo>()
         val adaper = FileinfoAdpter() { fileinfo ->
             val dialogView: DialogFileinfoBinding = DialogFileinfoBinding.inflate(LayoutInflater.from(requireContext()))
             dialogView.txtName.text = fileinfo.name
@@ -160,14 +159,6 @@ class FileSelectFragment : Fragment() {
         }
         val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
         itemTouchHelper.attachToRecyclerView(filesrvw)
-
-
-
-		/* TODO: デバッグ用削除予定 */
-        emptyList.add(Fileinfo(R.drawable.icon_document, requireContext()))
-        emptyList.add(Fileinfo(R.drawable.icon_binary, requireContext()))
-        emptyList.add(Fileinfo(R.drawable.icon_text, requireContext()))
-        /* デバッグ用削除予定 ここまで */
     }
 
     override fun onDestroyView() {
