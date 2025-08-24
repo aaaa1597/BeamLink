@@ -1,0 +1,168 @@
+トや色指定を活用してるよ。
+
+🧱 レイアウトXML（activity_main.xml）
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="#002200"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- BLE Scan Header -->
+    <TextView
+        android:id="@+id/bleScanTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="BLEスキャン"
+        android:textColor="#00FF00"
+        android:textSize="20sp"
+        android:fontFamily="@font/pixel_font" />
+
+    <!-- Radar Graphic Placeholder -->
+    <ImageView
+        android:id="@+id/radarImage"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:src="@drawable/radar_pixel"
+        android:contentDescription="Radar" />
+
+    <!-- Scanning Text -->
+    <TextView
+        android:id="@+id/scanningText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="スキャン中..."
+        android:textColor="#00FF00"
+        android:textSize="16sp"
+        android:fontFamily="@font/pixel_font"
+        android:layout_gravity="center" />
+
+    <!-- Device Name -->
+    <TextView
+        android:id="@+id/deviceName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="デバイス123"
+        android:textColor="#00FF00"
+        android:textSize="18sp"
+        android:fontFamily="@font/pixel_font"
+        android:layout_gravity="center" />
+
+    <!-- File Selection Header -->
+    <TextView
+        android:id="@+id/fileSelectTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ファイルを選択"
+        android:textColor="#00FF00"
+        android:textSize="20sp"
+        android:fontFamily="@font/pixel_font"
+        android:layout_marginTop="24dp" />
+
+    <!-- File Buttons -->
+    <Button
+        android:id="@+id/file1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ドキュメント1"
+        android:textColor="#00FF00"
+        android:background="#001100"
+        android:fontFamily="@font/pixel_font" />
+
+    <Button
+        android:id="@+id/file2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ドキュメント2"
+        android:textColor="#002200"
+        android:background="#00FF00"
+        android:fontFamily="@font/pixel_font" />
+
+    <Button
+        android:id="@+id/file3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ドキュメント3"
+        android:textColor="#00FF00"
+        android:background="#001100"
+        android:fontFamily="@font/pixel_font" />
+
+    <!-- Select Button -->
+    <Button
+        android:id="@+id/selectButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="選択"
+        android:textColor="#00FF00"
+        android:background="#003300"
+        android:fontFamily="@font/pixel_font"
+        android:layout_marginTop="16dp" />
+</LinearLayout>
+
+
+
+🧠 Kotlinコード（MainActivity.kt）
+package com.example.retropixelui
+
+import android.os.Bundle
+import android.widget.Button
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var file1: Button
+    private lateinit var file2: Button
+    private lateinit var file3: Button
+    private lateinit var selectButton: Button
+    private var selectedFile: String = "ドキュメント2"
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        file1 = findViewById(R.id.file1)
+        file2 = findViewById(R.id.file2)
+        file3 = findViewById(R.id.file3)
+        selectButton = findViewById(R.id.selectButton)
+
+        file1.setOnClickListener {
+            selectedFile = "ドキュメント1"
+            highlightSelected(file1)
+        }
+
+        file2.setOnClickListener {
+            selectedFile = "ドキュメント2"
+            highlightSelected(file2)
+        }
+
+        file3.setOnClickListener {
+            selectedFile = "ドキュメント3"
+            highlightSelected(file3)
+        }
+
+        selectButton.setOnClickListener {
+            Toast.makeText(this, "$selectedFile を選択しました", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun highlightSelected(selectedButton: Button) {
+        val buttons = listOf(file1, file2, file3)
+        buttons.forEach {
+            it.setBackgroundColor(android.graphics.Color.parseColor("#001100"))
+            it.setTextColor(android.graphics.Color.parseColor("#00FF00"))
+        }
+        selectedButton.setBackgroundColor(android.graphics.Color.parseColor("#00FF00"))
+        selectedButton.setTextColor(android.graphics.Color.parseColor("#002200"))
+    }
+}
+
+
+
+🎨 補足
+- @font/pixel_font はレトロなドットフォント（例：Press Start 2P）を res/font に追加して使ってね。
+- @drawable/radar_pixel はレーダー風のピクセル画像。自作してもいいし、フリー素材を使ってもOK！
+
+次は何を足そうか？アニメーション、効果音、BLEスキャンの実装なども一緒にできるよ
