@@ -1,0 +1,235 @@
+レイアウトXML
+このXMLコードは、画面のUIコンポーネントを定義します。
+
+XML
+
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#212121"
+    tools:context=".MainActivity">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardViewBleScan"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="16dp"
+        app:cardBackgroundColor="#333333"
+        app:cardCornerRadius="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline_middle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/textViewBleTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="BLE Scan"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/imageViewRadar"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginTop="16dp"
+                android:src="@drawable/ic_radar"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textViewBleTitle" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewBleDevices"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                app:layout_constraintBottom_toTopOf="@+id/buttonScan"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageViewRadar"
+                tools:listitem="@layout/item_ble_device" />
+
+            <Button
+                android:id="@+id/buttonScan"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="#03A9F4"
+                android:text="Scan"
+                android:textColor="#FFFFFF"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_middle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardViewFileSelection"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="32dp"
+        app:cardBackgroundColor="#FFFFFF"
+        app:cardCornerRadius="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline_middle">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/textViewFileTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="File Selection"
+                android:textColor="#212121"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewFiles"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                app:layout_constraintBottom_toTopOf="@+id/buttonSelect"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textViewFileTitle"
+                tools:listitem="@layout/item_file" />
+
+            <Button
+                android:id="@+id/buttonSelect"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="#03A9F4"
+                android:text="Select"
+                android:textColor="#FFFFFF"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+Kotlinコード
+このKotlinコードは、アクティビティのロジックを管理します。
+
+Kotlin
+
+import android.os.Bundle
+import android.widget.Button
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.*
+import java.io.File
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var bleDevicesRecyclerView: RecyclerView
+    private lateinit var filesRecyclerView: RecyclerView
+    private lateinit var scanButton: Button
+    private lateinit var selectButton: Button
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        // Initialize UI components
+        bleDevicesRecyclerView = findViewById(R.id.recyclerViewBleDevices)
+        filesRecyclerView = findViewById(R.id.recyclerViewFiles)
+        scanButton = findViewById(R.id.buttonScan)
+        selectButton = findViewById(R.id.buttonSelect)
+
+        // Setup RecyclerViews
+        bleDevicesRecyclerView.layoutManager = LinearLayoutManager(this)
+        filesRecyclerView.layoutManager = LinearLayoutManager(this)
+
+        // Handle button clicks
+        scanButton.setOnClickListener {
+            startBleScan()
+        }
+
+        selectButton.setOnClickListener {
+            // Implement file selection logic
+            Toast.makeText(this, "Select button clicked!", Toast.LENGTH_SHORT).show()
+        }
+
+        // Load files from storage on startup
+        loadFiles()
+    }
+
+    private fun startBleScan() {
+        Toast.makeText(this, "BLE Scan started...", Toast.LENGTH_SHORT).show()
+        // Here you would implement your actual BLE scanning logic
+        // For demonstration, we'll simulate a scan result
+        val dummyBleDevices = listOf(
+            "My Smart Device",
+            "Fitness Tracker X",
+            "BLE Beacon 001",
+            "BLE Beacon 002"
+        )
+        // Update RecyclerView with dummy data
+        // bleDevicesRecyclerView.adapter = BleDeviceAdapter(dummyBleDevices)
+    }
+
+    private fun loadFiles() {
+        // Here you would implement your actual file loading logic
+        // For demonstration, we'll use dummy data
+        val dummyFiles = listOf(
+            "Documents",
+            "Images",
+            "Downloads",
+            "Project Files",
+            "README.md"
+        )
+        // Update RecyclerView with dummy data
+        // filesRecyclerView.adapter = FileAdapter(dummyFiles)
+    }
+}
+このコードはあくまでも基本的なテンプレートであり、実際のアプリとして機能させるには、BLEスキャン機能やファイル選択機能を別途実装する必要があります。RecyclerView.Adapterの実装や、パーミッションの要求、AndroidのBLE APIやストレージAPIの利用などが含まれます。
