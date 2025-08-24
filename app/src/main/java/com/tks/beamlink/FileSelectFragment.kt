@@ -8,7 +8,10 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import android.graphics.Typeface
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.RippleDrawable
 import android.os.Bundle
 import android.provider.DocumentsContract
@@ -17,6 +20,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,6 +41,8 @@ import com.tks.beamlink.databinding.DialogFileinfoBinding
 import com.tks.beamlink.databinding.FragmentFileselectBinding
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toDrawable
 
 class FileSelectFragment : Fragment() {
     /************/

@@ -1,0 +1,185 @@
+ここでは、先ほどのレーダー付きBLEスキャン画面をベースに、Kotlin＋XMLで実装するためのコードと、スキャンエフェクトのアニメーション演出を組み込んだ例を紹介するね。
+
+🧱 レイアウトXML（activity_main.xml）
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="#001a1a"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp">
+
+    <!-- BLE Scan Title -->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="BLEスキャン"
+        android:textColor="#00ffcc"
+        android:textSize="24sp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:fontFamily="sans-serif-medium" />
+
+    <!-- Radar View -->
+    <ImageView
+        android:id="@+id/radarView"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_below="@id/title"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/radar_circle"
+        android:contentDescription="Radar" />
+
+    <!-- Sweep Line -->
+    <View
+        android:id="@+id/sweepLine"
+        android:layout_width="2dp"
+        android:layout_height="150dp"
+        android:layout_centerInParent="true"
+        android:background="#00ffcc"
+        android:rotation="0" />
+
+    <!-- Scanning Text -->
+    <TextView
+        android:id="@+id/scanningText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="スキャン中..."
+        android:textColor="#00ffcc"
+        android:textSize="16sp"
+        android:layout_below="@id/radarView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp" />
+
+</RelativeLayout>
+
+
+
+🧠 Kotlinコード（MainActivity.kt）
+package com.example.bleui
+
+import android.animation.ObjectAnimator
+import android.os.Bundle
+import android.view.View
+import android.view.animation.LinearInterpolator
+import androidx.appcompat.app.AppCompatActivity
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var sweepLine: View
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        sweepLine = findViewById(R.id.sweepLine)
+
+        // スキャンアニメーション（360度回転）
+        val radarAnimation = ObjectAnimator.ofFloat(sweepLine, "rotation", 0f, 360f).apply {
+            duration = 4000L  // 4秒で1周
+            repeatCount = ObjectAnimator.INFINITE
+            interpolator = LinearInterpolator()
+        }
+        radarAnimation.start()
+    }
+}
+
+
+
+🎨 補足ポイント
+- @drawable/radar_circle はレーダーの背景画像（グリッド＋円）を用意してね。SVGやPNGでOK。
+- sweepLine は中心から放射状に伸びるスキャンライン。アニメーションで回転させて残像感を演出。
+- 背景色やカラーコードはサイバーパンクやグラス風に合わせて調整可能。
+
+このコードをベースに、さらにブリップ（検出点）を追加したり、ファイル選択UIを下部に組み込んだりもできるよ！
+次はどこを強化してみようか？UIのスタイル変更、アニメーションの種類追加、BLE実装との連携など、何でもOK！
+
+
+------------------------------------------
+
+もちろん！R.id.sweepLine は、レイアウトXML内で定義されたビューのIDで、具体的には**レーダーのスキャンライン（放射状の線）**を表しています。これはアニメーションで回転させることで、レーダーがスキャンしているような演出をするための要素です。
+以下がその該当部分のXML定義です：
+<View
+    android:id="@+id/sweepLine"
+    android:layout_width="2dp"
+    android:layout_height="150dp"
+    android:layout_centerInParent="true"
+    android:background="#00ffcc"
+    android:rotation="0" />
+
+
+🔍 解説
+|  |  | 
+| android:id="@+id/sweepLine" |  | 
+| layout_width="2dp" |  | 
+| layout_height="150dp" |  | 
+| layout_centerInParent="true" |  | 
+| background="#00ffcc" |  | 
+| rotation="0" |  | 
+
+
+このビューを ObjectAnimator で360度回転させることで、レーダーのスイープ効果が生まれるんだよ。✨
+もしこの線をもっとリアルにしたいなら、グラデーションや残像エフェクトを追加することもできるよ。やってみる？それとも、ブリップ（検出点）を追加してみようか？
+
+----------------------------
+🎯 カスタムビューでレーダー描画（RadarView.kt
+
+package com.example.radarview
+
+import android.content.Context
+import android.graphics.*
+import android.util.AttributeSet
+import android.view.View
+import kotlin.math.cos
+import kotlin.math.sin
+
+class RadarView @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null
+) : View(context, attrs) {
+
+    private val radarPaint = Paint().apply {
+        color = Color.CYAN
+        style = Paint.Style.STROKE
+        strokeWidth = 2f
+        isAntiAlias = true
+    }
+
+    private val sweepPaint = Paint().apply {
+        color = Color.CYAN
+        strokeWidth = 4f
+        isAntiAlias = true
+    }
+
+    private var sweepAngle = 0f
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        val centerX = width / 2f
+        val centerY = height / 2f
+        val radius = minOf(centerX, centerY) - 16f
+
+        // 同心円を描画
+        val ringCount = 5
+        for (i in 1..ringCount) {
+            canvas.drawCircle(centerX, centerY, radius * i / ringCount, radarPaint)
+        }
+
+        // グリッド線（縦横）
+        canvas.drawLine(centerX, centerY - radius, centerX, centerY + radius, radarPaint)
+        canvas.drawLine(centerX - radius, centerY, centerX + radius, centerY, radarPaint)
+
+        // スイープライン（回転）
+        val sweepLength = radius
+        val rad = Math.toRadians(sweepAngle.toDouble())
+        val endX = centerX + sweepLength * cos(rad).toFloat()
+        val endY = centerY + sweepLength * sin(rad).toFloat()
+        canvas.drawLine(centerX, centerY, endX, endY, sweepPaint)
+
+        // アニメーション更新
+        sweepAngle += 2f
+        if (sweepAngle >= 360f) sweepAngle = 0f
+        postInvalidateDelayed(16L) // 約60fps
+    }
+}
